@@ -1,0 +1,31 @@
+{
+  "name": "CoolGrid · CoolFlow Dashboard",
+  "short_name": "CoolGrid",
+  "description": "Smart energy management for rainwater-assisted HVAC cooling",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1D9E75",
+  "background_color": "#f5f4f1",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

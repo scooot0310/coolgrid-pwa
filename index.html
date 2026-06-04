@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1D9E75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CoolGrid">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>CoolGrid Dashboard</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal:#1D9E75; --teal-light:#E1F5EE; --teal-dark:#085041; --teal-mid:#9FE1CB;
+    --amber:#BA7517; --amber-light:#FAEEDA; --amber-mid:#FAC775;
+    --red:#E24B4A; --red-light:#FCEBEB;
+    --blue:#378ADD; --blue-light:#E6F1FB; --blue-dark:#185FA5;
+    --gray-50:#F1EFE8; --gray-100:#D3D1C7; --gray-600:#5F5E5A;
+    --bg:#f5f4f1; --surface:#fff; --border:rgba(0,0,0,0.08);
+    --text:#1a1a18; --text-muted:#6b6b67;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141412; --surface:#1e1e1b; --border:rgba(255,255,255,0.08);
+            --text:#f0ede6; --text-muted:#888780; --teal-light:#0a2e22;
+            --amber-light:#2a1e08; --red-light:#2a0f0f; --blue-light:#0d1f35; --gray-50:#232320; }
+  }
+  html,body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; padding-top: max(0.85rem, env(safe-area-inset-top)); }
+  .logo { display: flex; align-items: center; gap: 9px; }
+  .logo-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--teal); display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+  .logo-name { font-size: 15px; font-weight: 600; }
+  .logo-name span { color: var(--teal); }
+
+  .conn-pill { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-100); flex-shrink: 0; }
+  .conn-dot.live { background: var(--teal); animation: blink 2s infinite; }
+  .conn-dot.warn { background: var(--amber); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .main { padding: 1.25rem 1rem 3rem; max-width: 640px; margin: 0 auto; }
+  .section { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); margin: 1.5rem 0 .65rem; }
+  .section:first-child { margin-top: 0.5rem; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .grid3 { grid-template-columns: 1fr 1fr; } .grid3 > :last-child { grid-column: 1 / -1; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; }
+  .card-title { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: .6rem; display: flex; align-items: center; gap: 5px; }
+
+  .kpi-val { font-size: 22px; font-weight: 600; color: var(--teal); line-height: 1; }
+  .kpi-unit { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  .big { font-size: 26px; font-weight: 600; line-height: 1; }
+  .cool { color: var(--teal); } .warm { color: var(--amber); } .hot { color: var(--red); } .norm { color: var(--text); }
+
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .row:last-child { border: none; }
+  .row-label { font-size: 12px; color: var(--text-muted); }
+  .row-val { font-size: 13px; font-weight: 500; }
+
+  .bar-track { width: 100%; height: 11px; border-radius: 6px; background: var(--gray-50); overflow: hidden; margin: .5rem 0 .25rem; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width .7s ease, background .4s; }
+
+  .pump-card { padding: .65rem .85rem; border-radius: 9px; border: 1px solid var(--border); margin-bottom: 9px; display: flex; justify-content: space-between; align-items: center; transition: background .3s; }
+  .pump-card.on  { background: var(--teal-light); border-color: var(--teal-mid); }
+  .pump-card.off { background: var(--gray-50); }
+  .pump-label { font-size: 13px; font-weight: 500; }
+  .pump-card.on .pump-label { color: var(--teal-dark); }
+
+  .badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; }
+  .b-on { background: var(--teal-mid); color: var(--teal-dark); }
+  .b-off { background: var(--gray-100); color: var(--gray-600); }
+  .b-auto { background: var(--blue-light); color: var(--blue-dark); }
+
+  .cmd-row { display: flex; gap: 6px; margin-top: 8px; }
+  .cmd-btn { flex: 1; padding: 9px 0; font-size: 12px; font-weight: 500; border: 1px solid var(--border); border-radius: 7px; background: transparent; cursor: pointer; color: var(--text-muted); font-family: var(--font); transition: all .12s; -webkit-appearance: none; }
+  .cmd-btn:active { transform: scale(0.97); }
+  .cmd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .cmd-btn.s-on { background: var(--teal-light); border-color: var(--teal-mid); color: var(--teal-dark); }
+  .cmd-btn.s-off { background: var(--gray-50); border-color: var(--gray-100); color: var(--gray-600); }
+  .cmd-btn.s-auto { background: var(--blue-light); border-color: #B5D4F4; color: var(--blue-dark); }
+
+  .alert-item { display: flex; align-items: flex-start; gap: 7px; padding: .55rem .75rem; border-radius: 8px; font-size: 12px; margin-bottom: 6px; border: 1px solid transparent; }
+  .a-warn { background: var(--amber-light); border-color: var(--amber-mid); color: var(--amber); }
+  .a-ok   { background: var(--teal-light);  border-color: var(--teal-mid);  color: var(--teal-dark); }
+  .a-info { background: var(--blue-light);  border-color: #B5D4F4;          color: var(--blue-dark); }
+
+  .src { font-size: 10px; color: var(--text-muted); margin-top: 7px; font-family: ui-monospace, monospace; }
+
+  .stale-banner { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-mid); padding: .5rem .75rem; border-radius: 8px; font-size: 12px; margin-bottom: 1rem; display: none; }
+  .stale-banner.visible { display: block; }
+
+  footer { text-align: center; font-size: 11px; color: var(--text-muted); padding: 1.5rem 0 .5rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2C8 7 4 10 4 14a8 8 0 0016 0c0-4-4-7-8-12z"/></svg></div>
+    <div class="logo-name">Cool<span>Grid</span></div>
+  </div>
+  <div class="conn-pill"><div class="conn-dot" id="dot"></div><span id="conn-lbl">Connecting...</span></div>
+</div>
+
+<div class="main">
+  <div id="stale-banner" class="stale-banner">⚠ No fresh data from ESP32 in 30+ seconds — check device power and WiFi</div>
+
+  <div class="section">Today's performance</div>
+  <div class="grid2">
+    <div class="card"><div class="card-title">Energy saved</div><div class="kpi-val" id="kpi-energy">—</div><div class="kpi-unit">kWh vs baseline</div></div>
+    <div class="card"><div class="card-title">Load reduction</div><div class="kpi-val" id="kpi-pct">—</div><div class="kpi-unit">compressor load</div></div>
+    <div class="card"><div class="card-title">Pump runtime</div><div class="kpi-val" id="kpi-runtime" style="color:var(--text)">—</div><div class="kpi-unit">hours today</div></div>
+    <div class="card"><div class="card-title">CO₂ avoided</div><div class="kpi-val" id="kpi-co2">—</div><div class="kpi-unit">kg today</div></div>
+  </div>
+
+  <div class="section">Water system</div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">12V pump control</div>
+      <div class="pump-card off" id="pump-card">
+        <span class="pump-label" id="pump-lbl">—</span>
+        <span class="badge b-off" id="pump-badge">—</span>
+      </div>
+      <div class="cmd-row">
+        <button class="cmd-btn" id="b-on"   onclick="sendCmd('ON')">Manual ON</button>
+        <button class="cmd-btn" id="b-off"  onclick="sendCmd('OFF')">Manual OFF</button>
+        <button class="cmd-btn s-auto" id="b-auto" onclick="sendCmd('AUTO')">Auto</button>
+      </div>
+      <div class="src">→ Firebase /coolgrid/cmd</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cistern level</div>
+      <div class="big cool" id="cis-pct">—</div>
+      <div class="kpi-unit" id="cis-dist">— cm from sensor</div>
+      <div class="bar-track"><div class="bar-fill" id="cis-fill" style="width:0%;background:var(--teal)"></div></div>
+      <div class="kpi-unit" id="cis-status">—</div>
+      <div class="src">HRLV-MaxSonar</div>
+    </div>
+  </div>
+
+  <div class="section">Temperature sensors</div>
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">DHT11 · Indoor</div>
+      <div class="big norm" id="t11-temp">—</div>
+      <div class="row" style="margin-top:.5rem"><span class="row-label">Humidity</span><span class="row-val" id="t11-hum">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">DHT22 · Condenser</div>
+      <div class="big norm" id="t22-temp">—</div>
+      <div class="row" style="margin-top:.5rem"><span class="row-label">Humidity</span><span class="row-val" id="t22-hum">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">DS18B20 · Water temp</div>
+      <div class="big norm" id="wt-temp">—</div>
+      <div class="row" style="margin-top:.5rem"><span class="row-label">Target</span><span class="row-val cool">≤ 28°C</span></div>
+    </div>
+  </div>
+
+  <div class="section">Alerts</div>
+  <div id="alerts"><div class="alert-item a-info">Waiting for live data from ESP32...</div></div>
+
+  <footer>CoolGrid · PWA via Firebase · <span id="last-upd">—</span></footer>
+</div>
+
+<!-- Firebase SDK (modular v10) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ─────────────────────────────────────────────
+  //  FIREBASE CONFIG  — paste yours here
+  //  Get this from Firebase Console → Project Settings → "Your apps" → Web app
+  // ─────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:        "YOUR_API_KEY",
+    authDomain:    "YOUR_PROJECT.firebaseapp.com",
+    databaseURL:   "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId:     "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    appId:         "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // ── state ───────────────────────────────────
+  let pumpRtH = 0;
+  let lastTelemetryTs = 0;
+
+  // ── connection indicator ────────────────────
+  const connRef = ref(db, ".info/connected");
+  onValue(connRef, (snap) => {
+    const online = snap.val();
+    document.getElementById('dot').className = 'conn-dot ' + (online ? 'live' : '');
+    document.getElementById('conn-lbl').textContent = online ? 'Firebase · live' : 'Reconnecting...';
+  });
+
+  // ── telemetry subscription ──────────────────
+  const telemetryRef = ref(db, 'coolgrid/telemetry');
+  onValue(telemetryRef, (snap) => {
+    const d = snap.val();
+    if (!d) return;
+    lastTelemetryTs = Date.now();
+    document.getElementById('stale-banner').classList.remove('visible');
+    applyData(d);
+  });
+
+  // ── stale data watchdog ─────────────────────
+  setInterval(() => {
+    if (lastTelemetryTs > 0 && (Date.now() - lastTelemetryTs) > 30000) {
+      document.getElementById('stale-banner').classList.add('visible');
+    }
+  }, 5000);
+
+  // ── apply data to UI ────────────────────────
+  function applyData(d) {
+    // KPIs
+    pumpRtH = parseFloat(d.pump_runtime_hours) || 0;
+    const kwh = (pumpRtH * 0.18).toFixed(2);
+    const pct = Math.min(12 + pumpRtH * 1.4, 29).toFixed(1);
+    const co2 = (kwh * 0.44).toFixed(2);
+    setText('kpi-energy',  kwh + ' kWh');
+    setText('kpi-pct',     pct + '%');
+    setText('kpi-runtime', pumpRtH.toFixed(2) + ' h');
+    setText('kpi-co2',     co2 + ' kg');
+
+    // Pump
+    const card  = document.getElementById('pump-card');
+    const lbl   = document.getElementById('pump-lbl');
+    const badge = document.getElementById('pump-badge');
+    if (d.pump_on) {
+      card.className  = 'pump-card on';
+      lbl.textContent = d.auto_mode ? 'Running (auto)' : 'Running (manual)';
+      badge.className = 'badge b-on';  badge.textContent = 'ON';
+    } else {
+      card.className  = 'pump-card off';
+      lbl.textContent = d.auto_mode ? 'Standby (auto)' : 'Stopped (manual)';
+      badge.className = 'badge b-off'; badge.textContent = 'OFF';
+    }
+
+    // Cistern
+    const pct2 = parseFloat(d.cistern_pct ?? d.cistern?.level_pct ?? 0);
+    const cm   = parseFloat(d.cistern_cm  ?? d.cistern?.distance_cm ?? 0);
+    setText('cis-pct',  pct2.toFixed(0) + '%');
+    setText('cis-dist', cm.toFixed(1) + ' cm from sensor');
+    const fill = document.getElementById('cis-fill');
+    fill.style.width      = pct2 + '%';
+    fill.style.background = pct2 < 20 ? 'var(--red)' : pct2 < 35 ? 'var(--amber)' : 'var(--teal)';
+    const cst = document.getElementById('cis-status');
+    if (pct2 < 15)      { cst.textContent = '⚠ Critically low — pump blocked'; cst.style.color = 'var(--red)'; }
+    else if (pct2 < 35) { cst.textContent = 'Low — monitor closely';            cst.style.color = 'var(--amber)'; }
+    else                { cst.textContent = 'Sufficient for operation';         cst.style.color = 'var(--teal)'; }
+
+    // Temperatures
+    const t11 = parseFloat(d.dht11_temp ?? d.dht11?.temp_c);
+    const t22 = parseFloat(d.dht22_temp ?? d.dht22?.temp_c);
+    const wt  = parseFloat(d.water_temp ?? d.water?.temp_c);
+    setBig('t11-temp', t11, 38, 33);
+    setBig('t22-temp', t22, 36, 32);
+    setBig('wt-temp',  wt,  35, 30);
+    setText('t11-hum', (d.dht11_hum ?? d.dht11?.humidity ?? '—') + '%');
+    setText('t22-hum', (d.dht22_hum ?? d.dht22?.humidity ?? '—') + '%');
+
+    // Alerts
+    const alerts = [];
+    if (wt >= 35)         alerts.push({t:'warn', m:'Water at ' + wt + '°C — pre-cooling needed'});
+    if (t11 >= 38)        alerts.push({t:'warn', m:'High indoor ambient: ' + t11 + '°C'});
+    if (pct2 < 15)        alerts.push({t:'warn', m:'Cistern critically low — pump blocked'});
+    if (d.pump_on && wt <= 28) alerts.push({t:'ok', m:'Target reached: water at ' + wt + '°C'});
+    if (alerts.length === 0) alerts.push({t:'ok', m:'All systems nominal'});
+    document.getElementById('alerts').innerHTML = alerts.map(a => `<div class="alert-item a-${a.t}">${a.m}</div>`).join('');
+
+    setText('last-upd', 'Updated ' + new Date().toLocaleTimeString());
+  }
+
+  function setText(id, v) { document.getElementById(id).textContent = v; }
+  function setBig(id, v, hot, warm) {
+    const el = document.getElementById(id);
+    if (isNaN(v)) { el.textContent = '—'; el.className = 'big norm'; return; }
+    el.textContent = v.toFixed(1) + '°C';
+    el.className = 'big ' + (v >= hot ? 'hot' : v >= warm ? 'warm' : 'cool');
+  }
+
+  // ── pump command ────────────────────────────
+  window.sendCmd = (cmd) => {
+    ['b-on','b-off','b-auto'].forEach(id => { document.getElementById(id).className = 'cmd-btn'; });
+    if (cmd === 'ON')   document.getElementById('b-on').className   = 'cmd-btn s-on';
+    if (cmd === 'OFF')  document.getElementById('b-off').className  = 'cmd-btn s-off';
+    if (cmd === 'AUTO') document.getElementById('b-auto').className = 'cmd-btn s-auto';
+
+    // Write the command. ESP32 listens to /coolgrid/cmd.
+    set(ref(db, 'coolgrid/cmd'), {
+      cmd: cmd,
+      ts:  serverTimestamp(),
+      src: 'pwa'
+    }).catch((e) => console.error('Command failed:', e));
+  };
+
+  // ── service worker registration ─────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((e) => console.warn('SW failed:', e));
+    });
+  }
+</script>
+</body>
+</html>
