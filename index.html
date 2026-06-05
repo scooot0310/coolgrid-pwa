@@ -209,6 +209,9 @@
 
 <!-- Firebase SDK (modular v10) -->
 <script type="module">
+ import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const auth = getAuth(app);
+await signInWithEmailAndPassword(auth, "device@coolgrid.local", "061003070725");
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, onValue, set, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
